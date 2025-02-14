@@ -83,7 +83,7 @@ class ChatProvider with ChangeNotifier {
 
   Future<void> sendMessage(String userId, String content) async {
     final message = Message(
-      id: DateTime.now().toString(), // In real app, use UUID
+      id: DateTime.now().toString(),
       senderId: 'current_user',
       receiverId: userId,
       content: content,
@@ -192,7 +192,6 @@ class ChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Add this method for background sync
   Future<void> syncMessages() async {
     try {
       for (var user in _users) {

@@ -15,7 +15,7 @@ class UserListScreen extends StatefulWidget {
 }
 
 class _UserListScreenState extends State<UserListScreen> {
-  int _selectedNavIndex = 3; // Chat tab selected by default
+  int _selectedNavIndex = 3;
 
   @override
   void initState() {
@@ -161,14 +161,13 @@ class _UserListScreenState extends State<UserListScreen> {
               ),
             ),
 
-            // Chat List Title with padding
             Padding(
               padding:
                   const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
               child: Text('Chats', style: AppTheme.subtitleText),
             ),
 
-            // Chat List with separators
+            // Chat List
             Expanded(
               child: Consumer<ChatProvider>(
                 builder: (context, provider, _) {

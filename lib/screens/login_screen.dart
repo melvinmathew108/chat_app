@@ -297,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        const Expanded(child: SizedBox()), // Replace Spacer with Expanded
+        const Expanded(child: SizedBox()),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -332,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 80), // Adjust top spacing
+                  const SizedBox(height: 80),
                   if (!_otpSent) ...[
                     Text(
                       'Enter your phone\nnumber',
@@ -340,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 40),
-                    _buildPhoneInputSection(), // Using the new widget here
+                    _buildPhoneInputSection(),
                     const SizedBox(height: 16),
                     Text(
                       'Fliq will send you a text with a verification code',

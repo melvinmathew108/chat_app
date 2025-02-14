@@ -15,7 +15,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
-  bool _isOnline = true; // This should come from a proper online status system
+  bool _isOnline = true;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
         .firstWhere((user) => user.id == widget.userId);
 
     return Scaffold(
-      backgroundColor: AppTheme.offWhite, // Update background color
+      backgroundColor: AppTheme.offWhite,
       body: SafeArea(
         child: Column(
           children: [

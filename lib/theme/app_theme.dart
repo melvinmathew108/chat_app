@@ -5,7 +5,7 @@ class AppTheme {
   static const Color lightGray = Color(0xFFF5F5F5);
   static const Color textGray = Color(0xFF9E9E9E);
   static const Color darkText = Color(0xFF2B2B2B);
-  static const Color offWhite = Color(0xFFF8F8F8); // Add this off-white color
+  static const Color offWhite = Color(0xFFF8F8F8);
 
   static TextStyle titleText = const TextStyle(
     fontSize: 24,
