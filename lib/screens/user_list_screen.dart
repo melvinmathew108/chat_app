@@ -1,12 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/chat_provider.dart';
-import '../models/user.dart';
+import '../theme/app_theme.dart';
+import '../widgets/custom_bottom_nav.dart';
 import 'chat_screen.dart';
-import 'login_screen.dart';
+import '../providers/app_provider.dart';
 
 class UserListScreen extends StatefulWidget {
   const UserListScreen({Key? key}) : super(key: key);
@@ -16,6 +15,8 @@ class UserListScreen extends StatefulWidget {
 }
 
 class _UserListScreenState extends State<UserListScreen> {
+  int _selectedNavIndex = 3; // Chat tab selected by default
+
   @override
   void initState() {
     super.initState();
@@ -23,29 +24,37 @@ class _UserListScreenState extends State<UserListScreen> {
   }
 
   Future<void> _loadUsers() async {
-    try {
-      await context.read<ChatProvider>().loadUsers();
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "Failed to load users. Using cached data.",
-        backgroundColor: Colors.red,
-      );
-    }
-  }
-
-  Future<void> _refreshUsers() async {
     await context.read<ChatProvider>().loadUsers();
   }
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_logged_in', false);
-    await context.read<ChatProvider>().logout();
+  void _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Logout',
+              style: TextStyle(color: Colors.red[700]),
+            ),
+          ),
+        ],
+      ),
+    );
 
-    if (mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
+    if (confirmed == true && mounted) {
+      await context.read<AppProvider>().logout();
+      await context.read<ChatProvider>().logout();
+      Navigator.pushReplacement(
+        context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
       );
     }
   }
@@ -54,134 +63,227 @@ class _UserListScreenState extends State<UserListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Chats', style: TextStyle(color: Colors.pink)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.pink),
-            onPressed: _logout,
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshUsers,
-        child: Consumer<ChatProvider>(
-          builder: (context, provider, child) {
-            return Column(
-              children: [
-                SizedBox(
-                  height: 100,
-                  child: ListView.builder(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Messages', style: AppTheme.titleText),
+                  IconButton(
+                    icon: const Icon(Icons.logout, color: AppTheme.textGray),
+                    onPressed: _handleLogout,
+                  ),
+                ],
+              ),
+            ),
+            // Story Circles
+            SizedBox(
+              height: 100,
+              child: Consumer<ChatProvider>(
+                builder: (context, provider, _) {
+                  return ListView.builder(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: provider.users.length,
                     itemBuilder: (context, index) {
                       final user = provider.users[index];
-                      return StoryCircle(user: user);
-                    },
-                  ),
-                ),
-                const Divider(color: Colors.pink),
-                Expanded(
-                  child: provider.users.isEmpty
-                      ? const Center(
-                          child: Text('No chats available'),
-                        )
-                      : ListView.builder(
-                          itemCount: provider.users.length,
-                          itemBuilder: (context, index) {
-                            final user = provider.users[index];
-                            return UserListTile(user: user);
-                          },
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundImage:
+                                      NetworkImage(user.profilePicture),
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: index % 2 == 0
+                                          ? Colors.green
+                                          : Colors.red,
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              user.name.split(' ')[0],
+                              style: AppTheme.regularText,
+                            ),
+                          ],
                         ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class StoryCircle extends StatelessWidget {
-  final User user;
-
-  const StoryCircle({Key? key, required this.user}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => ChatScreen(userId: user.id)),
-      ),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.pink, width: 2),
-              ),
-              child: CircleAvatar(
-                radius: 30,
-                backgroundImage:
-                    CachedNetworkImageProvider(user.profilePicture),
+                      );
+                    },
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              user.name,
-              style: const TextStyle(fontSize: 12),
-              overflow: TextOverflow.ellipsis,
+            // Search Bar with padding
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.lightGray,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search',
+                          hintStyle: TextStyle(color: AppTheme.textGray),
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.search, color: AppTheme.textGray),
+                  ],
+                ),
+              ),
+            ),
+
+            // Chat List Title with padding
+            Padding(
+              padding:
+                  const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
+              child: Text('Chats', style: AppTheme.subtitleText),
+            ),
+
+            // Chat List with separators
+            Expanded(
+              child: Consumer<ChatProvider>(
+                builder: (context, provider, _) {
+                  return ListView.separated(
+                    itemCount: provider.users.length,
+                    separatorBuilder: (context, index) => const Divider(
+                      height: 1,
+                      thickness: 0.5,
+                      indent: 84,
+                      endIndent: 16,
+                      color: AppTheme.lightGray,
+                    ),
+                    itemBuilder: (context, index) {
+                      final user = provider.users[index];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        leading: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 26,
+                              backgroundImage:
+                                  NetworkImage(user.profilePicture),
+                            ),
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: index % 2 == 0
+                                      ? Colors.green
+                                      : Colors.red,
+                                  border:
+                                      Border.all(color: Colors.white, width: 2),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        title: Text(
+                          user.name,
+                          style: AppTheme.subtitleText.copyWith(
+                            fontWeight: user.unseenCount > 0
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Text(
+                          user.lastMessage ?? '',
+                          style: AppTheme.regularText.copyWith(
+                            color: AppTheme.textGray,
+                            fontWeight: user.unseenCount > 0
+                                ? FontWeight.w500
+                                : FontWeight.normal,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '12:30 PM',
+                              style: AppTheme.regularText.copyWith(
+                                color: AppTheme.textGray,
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (user.unseenCount > 0) ...[
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.primaryPink,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '${user.unseenCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatScreen(userId: user.id),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class UserListTile extends StatelessWidget {
-  final User user;
-
-  const UserListTile({Key? key, required this.user}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: CachedNetworkImageProvider(user.profilePicture),
+      bottomNavigationBar: CustomBottomNav(
+        selectedIndex: _selectedNavIndex,
+        onTap: (index) {
+          setState(() => _selectedNavIndex = index);
+        },
       ),
-      title: Text(user.name),
-      subtitle: Text(user.lastMessage ?? ''),
-      trailing: user.unseenCount > 0
-          ? Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Colors.pink,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '${user.unseenCount}',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            )
-          : null,
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(userId: user.id),
-          ),
-        );
-      },
     );
   }
 }

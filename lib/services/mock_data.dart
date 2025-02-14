@@ -7,72 +7,67 @@ class MockDataService {
       User(
         id: '1',
         name: 'John Doe',
-        profilePicture: 'https://i.pravatar.cc/150?img=1',
-        lastMessage: 'Hey there!',
+        profilePicture:
+            'https://ui-avatars.com/api/?name=John+Doe&background=random',
+        lastMessage: 'Hello there!',
         unseenCount: 2,
       ),
       User(
         id: '2',
         name: 'Jane Smith',
-        profilePicture: 'https://i.pravatar.cc/150?img=2',
+        profilePicture:
+            'https://ui-avatars.com/api/?name=Jane+Smith&background=random',
         lastMessage: 'How are you?',
         unseenCount: 0,
       ),
       User(
         id: '3',
         name: 'Mike Johnson',
-        profilePicture: 'https://i.pravatar.cc/150?img=3',
+        profilePicture:
+            'https://ui-avatars.com/api/?name=Mike+Johnson&background=random',
         lastMessage: 'See you soon!',
         unseenCount: 1,
       ),
       User(
         id: '4',
-        name: 'Sarah Williams',
-        profilePicture: 'https://i.pravatar.cc/150?img=4',
-        lastMessage: 'Thanks!',
+        name: 'Sarah Wilson',
+        profilePicture:
+            'https://ui-avatars.com/api/?name=Sarah+Wilson&background=random',
+        lastMessage: 'Great idea!',
         unseenCount: 0,
       ),
     ];
   }
 
   List<Message> getMockMessages(String userId) {
-    final now = DateTime.now();
     return [
       Message(
         id: '1',
         senderId: userId,
         receiverId: 'current_user',
-        content: 'Hey! How are you?',
-        timestamp: now.subtract(const Duration(days: 1)),
-        isSeen: true,
+        content: 'Hello there!',
+        timestamp: DateTime.now().subtract(const Duration(days: 1)),
       ),
       Message(
         id: '2',
         senderId: 'current_user',
         receiverId: userId,
-        content: 'I\'m good, thanks! How about you?',
-        timestamp: now.subtract(const Duration(hours: 23)),
+        content: 'Hi! How are you?',
+        timestamp: DateTime.now().subtract(const Duration(hours: 23)),
       ),
       Message(
         id: '3',
         senderId: userId,
         receiverId: 'current_user',
-        content: 'Pretty good! Working on some exciting projects.',
-        timestamp: now.subtract(const Duration(hours: 22)),
+        content: 'I am good, thanks!',
+        timestamp: DateTime.now().subtract(const Duration(hours: 22)),
       ),
       Message(
         id: '4',
         senderId: 'current_user',
         receiverId: userId,
-        content: 'That sounds interesting! Tell me more.',
-        timestamp: now.subtract(const Duration(hours: 21)),
-      ),
-      Message(
-        id: '5',
-        senderId: userId,
-        receiverId: 'current_user',
-        content: 'Sure! Let\'s catch up soon.',
-        timestamp: now.subtract(const Duration(hours: 20)),
+        content: 'What are you up to?',
+        timestamp: DateTime.now().subtract(const Duration(hours: 21)),
       ),
     ];
   }

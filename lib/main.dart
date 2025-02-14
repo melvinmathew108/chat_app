@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'models/user.dart';
 import 'models/message.dart';
 import 'providers/app_provider.dart';
@@ -15,7 +14,6 @@ import 'services/mock_data.dart';
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     final provider = ChatProvider(mockDataService: MockDataService());
-    await provider.syncMessages();
     return true;
   });
 }
@@ -25,13 +23,6 @@ void main() async {
 
   // Initialize Hive
   await Hive.initFlutter();
-
-  // Delete all Hive data to start fresh
-  try {
-    await Hive.deleteFromDisk();
-  } catch (e) {
-    debugPrint('Error deleting Hive data: $e');
-  }
 
   // Register adapters with explicit type checking
   if (!Hive.isAdapterRegistered(0)) {
@@ -55,23 +46,23 @@ void main() async {
     frequency: const Duration(minutes: 15),
   );
 
-  // Reset preferences
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
+  // Initialize AppProvider
+  final appProvider = AppProvider();
+  await appProvider.initialize();
 
-  runApp(const MyApp(isLoggedIn: false));
+  runApp(MyApp(appProvider: appProvider));
 }
 
 class MyApp extends StatelessWidget {
-  final bool isLoggedIn;
+  final AppProvider appProvider;
 
-  const MyApp({super.key, required this.isLoggedIn});
+  const MyApp({super.key, required this.appProvider});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppProvider()),
+        ChangeNotifierProvider.value(value: appProvider),
         ChangeNotifierProvider(
           create: (_) => ChatProvider(mockDataService: MockDataService()),
         ),
@@ -84,7 +75,9 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: Colors.white,
           useMaterial3: true,
         ),
-        home: isLoggedIn ? const UserListScreen() : const LoginScreen(),
+        home: appProvider.isLoggedIn
+            ? const UserListScreen()
+            : const LoginScreen(),
       ),
     );
   }
